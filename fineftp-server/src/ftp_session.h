@@ -2,10 +2,13 @@
 
 #include <asio.hpp> // IWYU pragma: keep
 
+#include <cstdint>
 #include <deque>
 #include <functional>
 #include <map>
 #include <memory>
+#include <ostream>
+#include <random>
 #include <string>
 #include <vector>
 
@@ -129,6 +132,14 @@ namespace fineftp
     void sendFile               (const std::shared_ptr<ReadableFile>& file,
                                  const command_type command = command_type::FTP_CMD_NONE);
 
+    void acceptDataConnection   (const std::function<void(const std::shared_ptr<asio::ip::tcp::socket>&)>& connected_handler);
+
+    bool validateDataConnection (const std::shared_ptr<asio::ip::tcp::socket>& data_socket);
+
+    void closeDataAcceptor      ();
+
+    static void closeDataSocket (const std::shared_ptr<asio::ip::tcp::socket>& data_socket);
+
     void addDataToBufferAndSend (const std::shared_ptr<std::vector<char>>&     data
                                , const std::shared_ptr<asio::ip::tcp::socket>& data_socket);
 
@@ -224,6 +235,12 @@ namespace fineftp
 
     std::ostream& output_;  /* Normal output log */
     std::ostream& error_;   /* Error output log */
+
+    // Random generator for STOU command
+    using random_distribution_inttype = uint32_t;
+    std::mt19937                                               random_generator_;
+    std::uniform_int_distribution<random_distribution_inttype> random_distribution_;
+
     FtpCommandCallback ftp_command_callback_ {};
   };
 }
